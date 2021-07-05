@@ -2,6 +2,8 @@ build
 asan_build
 tsan_build
 .cache
+.idea/
+cmake-build-debug/
 
 # Prerequisites
 *.d

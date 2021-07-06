@@ -10,20 +10,14 @@ class Deadlock {
   }
 
   void ThreadOne() {
-      std::unique_lock lock(first_mutex_);
+      std::unique_lock f_lock(first_mutex_);
       std::this_thread::sleep_for(interval_);
-      while (!second_mutex_.try_lock()) {
-          std::this_thread::sleep_for(interval_);
-      }
-      second_mutex_.unlock();
+      std::unique_lock s_lock(second_mutex_);
   }
 
   void ThreadTwo() {
-      std::unique_lock lock(second_mutex_);
-      while (!first_mutex_.try_lock()) {
-          std::this_thread::sleep_for(interval_);
-      }
-      first_mutex_.unlock();
+      std::unique_lock s_lock(second_mutex_);
+      std::unique_lock f_lock(first_mutex_);
   }
 
  private:

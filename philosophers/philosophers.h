@@ -33,9 +33,9 @@ class Fork {
 class Philosopher {
  public:
   Philosopher(size_t id, Fork* left_fork, Fork* right_fork)
-    : id_(id), left_fork_(left_fork), right_fork_(right_fork) {
-      if (left_fork_->Id() > right_fork_->Id()) {
-          std::swap(left_fork_, right_fork_);
+    : id_(id), second_fork_(left_fork), first_fork_(right_fork) {
+      if (second_fork_->Id() > first_fork_->Id()) {
+          std::swap(second_fork_, first_fork_);
       }
   }
 
@@ -44,18 +44,18 @@ class Philosopher {
   }
 
   void Eat() {
-      while (!right_fork_->TryGet());
-      while (!left_fork_->TryGet());
+      while (!first_fork_->TryGet());
+      while (!second_fork_->TryGet());
   }
 
   void Think() {
-    right_fork_->Put();
-    left_fork_->Put();
+      first_fork_->Put();
+      second_fork_->Put();
   }
 
  private:
-  const size_t id_;
-  Fork* left_fork_;
-  Fork* right_fork_;
+    const size_t id_;
+    Fork* second_fork_;
+    Fork* first_fork_;
 };
 

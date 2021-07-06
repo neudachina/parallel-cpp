@@ -10,32 +10,32 @@ public:
     ThreadSafeVector() = default;
 
     T operator[](size_t index) const {
-        read_mutex_.lock_shared();
+        std::shared_lock lock(read_mutex_);
         T result = vector_[index];
-        read_mutex_.unlock_shared();
         return result;
     }
 
     size_t Size() const {
-        return vector_.size();
+        return size_;
     }
 
     void PushBack(const T& value) {
-        write_mutex_.lock();
+        std::unique_lock w_lock(write_mutex_);
         if (vector_.size() == vector_.capacity()) {
-            read_mutex_.lock();
+            std::unique_lock r_lock(read_mutex_);
             vector_.push_back(value);
-            read_mutex_.unlock();
+            ++size_;
         } else {
             vector_.push_back(value);
+            ++size_;
         }
-        write_mutex_.unlock();
     }
 
 private:
     mutable std::shared_mutex read_mutex_;
     mutable std::mutex write_mutex_;
     std::vector<T> vector_;
+    std::atomic<size_t> size_;
 };
 
 

@@ -44,8 +44,8 @@ class Philosopher {
   }
 
   void Eat() {
-      while (!first_fork_->TryGet());
-      while (!second_fork_->TryGet());
+      first_fork_->Get();
+      second_fork_->Get();
   }
 
   void Think() {

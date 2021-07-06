@@ -21,8 +21,9 @@ class ThreadSafeQueue {
   T Pop() {
       int x;
       std::unique_lock<std::mutex> lock(mutex_);
-      while (queue_.empty())
+      while (queue_.empty()) {
           cv_.wait(lock);
+      }
       x = queue_.front();
       queue_.pop();
       return x;

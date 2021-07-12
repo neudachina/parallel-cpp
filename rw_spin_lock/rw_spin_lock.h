@@ -1,28 +1,52 @@
 #pragma once
 
+#include <atomic>
+#include <thread>
 
 class RWSpinLock {
- public:
-  RWSpinLock() {
-  }
+public:
+    RWSpinLock() : data_(0) {}
 
-  void LockRead() {
-    // Your code
-  }
+    void LockRead() {
+        while (true) {
+            uint64_t expected = data_.load();
+            if (expected & 1) {
+                std::this_thread::yield();
+                continue;
+            }
+            if (data_.compare_exchange_weak(expected, expected + 2)) {
+                break;
+            }
+        }
+    }
 
-  void UnlockRead() {
-    // Your code
-  }
+    void UnlockRead() {
+        data_.fetch_sub(2);
+    }
 
-  void LockWrite() {
-    // Your code
-  }
+    void LockWrite() {
+        while (true) {
+            uint64_t expected = data_.load();
+            if (expected & 1) {
+                std::this_thread::yield();
+                continue;
+            }
 
-  void UnlockWrite() {
-    // Your code
-  }
+            if (data_.compare_exchange_weak(expected, expected + 1)) {
+                break;
+            }
+        }
+
+        while (data_ != 1) {
+            std::this_thread::yield();
+        }
+    }
+
+    void UnlockWrite() {
+        data_.store(0);
+    }
 
  private:
-  // Your code
+    std::atomic<uint64_t> data_;
 };
 

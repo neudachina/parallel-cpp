@@ -4,8 +4,8 @@
 #include <thread>
 
 struct Node {
-    bool blocked = false;
-    Node* next = nullptr;
+    std::atomic<bool> blocked = false;
+    std::atomic<Node*> next = nullptr;
 };
 
 class MCSLock {
@@ -17,8 +17,9 @@ public:
         if (prev) {
             node_.blocked = true;
             prev->next = &node_;
-            while (node_.blocked)
+            while (node_.blocked) {
                 std::this_thread::yield();
+            }
         }
 
     }
@@ -31,9 +32,10 @@ public:
             }
         }
 
-        while (!node_.next)
+        while (!node_.next) {
             std::this_thread::yield();
-        node_.next->blocked = false;
+        }
+        static_cast<Node*>(node_.next)->blocked = false;
     }
 
 private:

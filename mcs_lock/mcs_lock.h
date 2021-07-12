@@ -4,36 +4,39 @@
 #include <thread>
 
 struct Node {
-    bool flag = false;
+    bool blocked = false;
     Node* next = nullptr;
 };
 
 class MCSLock {
- public:
-  MCSLock() : tail_(nullptr) {}
+public:
+    MCSLock() : tail_(nullptr) {}
 
-  void Lock() {
-      Node* prev = tail_.exchange(&node_);
-      if (prev) {
-          prev->next = &node_;
-          while (!node_.flag)
-              std::this_thread::yield();
-      }
+    void Lock() {
+        Node* prev = tail_.exchange(&node_);
+        if (prev) {
+            node_.blocked = true;
+            prev->next = &node_;
+            while (node_.blocked)
+                std::this_thread::yield();
+        }
 
-  }
+    }
 
-  void Unlock() {
-      Node* expected = &node_;
-      if (tail_.compare_exchange_weak(expected, nullptr)) {
-          return;
-      }
-      while (!node_.next)
-          std::this_thread::yield();
-      node_.next->flag = true;
-  }
+    void Unlock() {
+        Node* expected = &node_;
+        if (!node_.next) {
+            if (tail_.compare_exchange_weak(expected, nullptr)) {
+                return;
+            }
+        }
+
+        while (!node_.next)
+            std::this_thread::yield();
+        node_.next->blocked = false;
+    }
 
 private:
     thread_local static Node node_;
     std::atomic<Node*> tail_;
 };
-

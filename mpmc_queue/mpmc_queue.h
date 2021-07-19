@@ -5,12 +5,6 @@
 #include <thread>
 
 template <class T>
-struct Node {
-    T value = T();
-    std::atomic<uint64_t> tag = 0;
-};
-
-template <class T>
 class MPMCQueue {
 public:
     explicit MPMCQueue(uint64_t max_size) :
@@ -75,7 +69,12 @@ public:
     }
 
 private:
-    std::vector<Node<T>> data_;
+    struct Node {
+        T value = T();
+        std::atomic<uint64_t> tag = 0;
+    };
+
+    std::vector<Node> data_;
     uint64_t size_;
     std::atomic<uint64_t> head_, tail_;
 };
